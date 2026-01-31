@@ -22,10 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Load posts on homepage
-    if (postsContainer) {
-        loadPosts();
-    }
-    
+    if (postsContainer) loadPosts();
+
     // Setup hamburger menu
     if (hamburger && navbar) {
         hamburger.addEventListener('click', () => {
@@ -42,8 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Load article if on article page
     if (window.location.pathname.includes('article.html')) {
-        loadArticle();
-        setupShareButtons();
+        loadArticle().then(() => setupShareButtons());
     }
 });
 
@@ -86,7 +83,6 @@ async function loadPosts() {
 // Create post card HTML
 function createPostCard(post) {
     const articleUrl = `article.html?id=${post.id}`;
-    
     return `
         <article class="post-card">
             ${post.image_url ? `
@@ -115,172 +111,173 @@ function createPostCard(post) {
 
 // Share post function
 function sharePost(postId) {
-    const shareUrl = `${window.location.origin}/article.html?id=${postId}`;
-    const post = window.postsCache ? window.postsCache[postId] : null;
-
-    const text = post && post.summary ? post.summary : (post ? post.title : '');
-    
-    if (navigator.share) {
-        navigator.share({
-            title: post ? post.title : 'Transport and Society Online',
-            text: text,
-            url: shareUrl
-        });
-    } else {
-        // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareUrl).then(() => {
-            alert('Link copied to clipboard!');
-        });
-    }
+  const shareUrl = `${window.location.origin}/article.html?id=${postId}`;
+  const post = window.postsCache ? window.postsCache[postId] : null;
+  const text = getPostSummary(post) || (post ? post.title : 'Transport and Society Online');
+  if (navigator.share) {
+    navigator.share({ title: post ? post.title : 'Transport and Society Online', text: text, url: shareUrl });
+  } else {
+    // Fallback: copy to clipboard
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      alert('Link copied to clipboard!');
+    });
+  }
 }
-
 
 // Load full article
 async function loadArticle() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const postId = urlParams.get('id');
-    const articleContent = document.getElementById('article-content');
+  const urlParams = new URLSearchParams(window.location.search);
+  const postId = urlParams.get('id');
+  const articleContent = document.getElementById('article-content');
+  
+  if (!postId) {
+    articleContent.innerHTML = `
+      <div class="error-message">
+        <h1>Article Not Found</h1>
+        <p>The requested article could not be found.</p>
+        <a href="index.html" class="read-more">Back to Home</a>
+      </div>
+    `;
+    return;
+  }
+  
+  try {
+    const { data: post, error } = await supabaseClient
+      .from('posts')
+      .select('*')
+      .eq('id', postId)
+      .single();
     
-    if (!postId) {
-        articleContent.innerHTML = `
-            <div class="error-message">
-                <h1>Article Not Found</h1>
-                <p>The requested article could not be found.</p>
-                <a href="index.html" class="read-more">Back to Home</a>
-            </div>
-        `;
-        return;
+    if (error) throw error;
+    
+    if (!post) {
+      articleContent.innerHTML = `
+        <div class="error-message">
+          <h1>Article Not Found</h1>
+          <p>The requested article could not be found.</p>
+          <a href="index.html" class="read-more">Back to Home</a>
+        </div>
+      `;
+      return;
     }
     
-    try {
-        const { data: post, error } = await supabaseClient
-            .from('posts')
-            .select('*')
-            .eq('id', postId)
-            .single();
-        
-        if (error) throw error;
-        
-        if (!post) {
-            articleContent.innerHTML = `
-                <div class=\"error-message\"> 
-                    <h1>Article Not Found</h1>
-                    <p>The requested article could not be found.</p>
-                    <a href=\"index.html\" class=\"read-more\">Back to Home</a>
-                </div>
-            `;
-            return;
-        }
-        
-        // Update page metadata for social sharing
-        updateMetaTags(post);
-        // Cache current article for improved sharing on the article page
-        window.currentArticle = post;
-        
-        // Display article
-        articleContent.innerHTML = `
-            <div class=\"article-header\">
-                <span class=\"post-category\">${post.category.toUpperCase()}</span>
-                <h1>${post.title}</h1>
-                <div class=\"article-meta\">
-                    <span><i class=\"far fa-calendar\"></i> ${new Date(post.created_at).toLocaleDateString()}</span>
-                </div>
-            </div>
-            
-            ${post.image_url ? `
-                <img src=\"${post.image_url}\" alt=\"${post.title}\" class=\"article-image\">
-            ` : ''}
-            
-            <div class=\"article-body\">
-                ${post.content.replace(/\n/g, '<br>')}
-            </div>
-        `;
-        
-    } catch (error) {
-        console.error('Error loading article:', error);
-        articleContent.innerHTML = `
-            <div class=\"error-message\">
-                <h1>Error Loading Article</h1>
-                <p>There was an error loading the article. Please try again later.</p>
-                <a href=\"index.html\" class=\"read-more\">Back to Home</a>
-            </div>
-        `;
-    }
+    // Update page metadata for social sharing
+    updateMetaTags(post);
+    // Cache current article for improved sharing on the article page
+    window.currentArticle = post;
+    
+    // Display article
+    articleContent.innerHTML = `
+      <div class="article-header">
+        <span class="post-category">${post.category.toUpperCase()}</span>
+        <h1>${post.title}</h1>
+        <div class="article-meta">
+          <span><i class="far fa-calendar"></i> ${new Date(post.created_at).toLocaleDateString()}</span>
+        </div>
+      </div>
+      
+      ${post.image_url ? `
+        <img src="${post.image_url}" alt="${post.title}" class="article-image">
+      ` : ''}
+      
+      <div class="article-body">
+        ${post.content.replace(/\n/g, '<br>')}
+      </div>
+    `;
+    
+    // configure share buttons after article data is loaded
+    setupShareButtons();
+  } catch (error) {
+    console.error('Error loading article:', error);
+    articleContent.innerHTML = `
+      <div class="error-message">
+        <h1>Error Loading Article</h1>
+        <p>There was an error loading the article. Please try again later.</p>
+        <a href="index.html" class="read-more">Back to Home</a>
+      </div>
+    `;
+  }
 }
 
-// Update meta tags for social sharing
 function updateMetaTags(post) {
-    // Update page title
-    document.title = `${post.title} - Transport and Society Online`;
+  // Update page title
+  document.title = `${post.title} - Transport and Society Online`;
+  
+  // Create meta tags if they don't exist
+  const metaTags = {
+    'og:title': post.title,
+    'og:description': post.summary,
+    'og:url': window.location.href,
+    'og:image': post.image_url || `${window.location.origin}/default-og-image.jpg`,
+    'twitter:title': post.title,
+    'twitter:description': post.summary,
+    'twitter:image': post.image_url || `${window.location.origin}/default-og-image.jpg`
+  };
+  
+  Object.entries(metaTags).forEach(([property, content]) => {
+    let meta = document.querySelector(`meta[property="${property}"]`) || 
+               document.querySelector(`meta[name="${property}"]`);
     
-    // Create meta tags if they don't exist
-    const metaTags = {
-        'og:title': post.title,
-        'og:description': post.summary,
-        'og:url': window.location.href,
-        'og:image': post.image_url || `${window.location.origin}/default-og-image.jpg`,
-        'twitter:title': post.title,
-        'twitter:description': post.summary,
-        'twitter:image': post.image_url || `${window.location.origin}/default-og-image.jpg`
-    };
-    
-    Object.entries(metaTags).forEach(([property, content]) => {
-        let meta = document.querySelector(`meta[property="${property}"]`) || 
-                   document.querySelector(`meta[name="${property}"]`);
-        
-        if (!meta) {
-            meta = document.createElement('meta');
-            if (property.startsWith('og:')) {
-                meta.setAttribute('property', property);
-            } else {
-                meta.setAttribute('name', property);
-            }
-            document.head.appendChild(meta);
-        }
-        meta.setAttribute('content', content);
-    });
+    if (!meta) {
+      meta = document.createElement('meta');
+      if (property.startsWith('og:')) {
+        meta.setAttribute('property', property);
+      } else {
+        meta.setAttribute('name', property);
+      }
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', content);
+  });
 }
 
-// Setup share buttons
+// Setup share buttons (for homepage and article page)
 function setupShareButtons() {
-    const whatsappBtn = document.getElementById('whatsapp-share');
-    const facebookBtn = document.getElementById('facebook-share');
-    const twitterBtn = document.getElementById('twitter-share');
-    const copyLinkBtn = document.getElementById('copy-link');
-    
-    const currentUrl = encodeURIComponent(window.location.href);
-    const pageTitle = encodeURIComponent(document.title);
-    
-    // Prefer article summary for WhatsApp share text if available
-    let waText = pageTitle;
-    if (typeof window.currentArticle !== 'undefined' && window.currentArticle && window.currentArticle.summary) {
-        waText = encodeURIComponent(window.currentArticle.summary);
-    }
+  const whatsappBtn = document.getElementById('whatsapp-share');
+  const facebookBtn = document.getElementById('facebook-share');
+  const twitterBtn = document.getElementById('twitter-share');
+  const copyLinkBtn = document.getElementById('copy-link');
+  const currentUrl = encodeURIComponent(window.location.href);
+  const pageTitle = encodeURIComponent(document.title);
 
-    if (whatsappBtn) {
-        whatsappBtn.href = `https://wa.me/?text=${waText}%20${currentUrl}`;
-    }
-    
-    if (facebookBtn) {
-        facebookBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`;
-    }
-    
-    if (twitterBtn) {
-        twitterBtn.href = `https://twitter.com/intent/tweet?url=${currentUrl}&text=${pageTitle}`;
-    }
-    
-    if (copyLinkBtn) {
-        copyLinkBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                const originalText = copyLinkBtn.innerHTML;
-                copyLinkBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                setTimeout(() => {
-                    copyLinkBtn.innerHTML = originalText;
-                }, 2000);
-            });
-        });
-    }
+  // Build WhatsApp text from summary if available
+  let waText = pageTitle;
+  if (typeof window.currentArticle !== 'undefined' && window.currentArticle) {
+    const summary = getPostSummary(window.currentArticle);
+    if (summary) waText = encodeURIComponent(summary);
+    else waText = encodeURIComponent(window.currentArticle.title);
+  }
+
+  if (whatsappBtn) {
+    whatsappBtn.href = `https://wa.me/?text=${waText}%20${currentUrl}`;
+  }
+  if (facebookBtn) {
+    facebookBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`;
+  }
+  if (twitterBtn) {
+    twitterBtn.href = `https://twitter.com/intent/tweet?url=${currentUrl}&text=${pageTitle}`;
+  }
+  if (copyLinkBtn) {
+    copyLinkBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        const originalText = copyLinkBtn.innerHTML;
+        copyLinkBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => { copyLinkBtn.innerHTML = originalText; }, 2000);
+      });
+    });
+  }
 }
 
-// Make sharePost available globally for onclick handlers
+// Helper: derive per-post summary
+function getPostSummary(post) {
+  if (!post) return '';
+  const s = (post.summary || '').trim();
+  if (s) {
+    return s.length > 240 ? s.substring(0, 240).trim() + '…' : s;
+  }
+  const text = (post.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  return text.length > 240 ? text.substring(0, 240).trim() + '…' : text;
+}
+
+// Make sure the sharePost function is globally accessible
 window.sharePost = sharePost;
