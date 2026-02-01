@@ -200,18 +200,40 @@ async function loadArticle() {
 }
 
 function updateMetaTags(post) {
+  const fullUrl = window.location.href;
+  let ogImage = post.image_url || `${window.location.origin}/images/logo.png`;
+  
+  // Ensure ogImage is an absolute URL
+  if (ogImage && !ogImage.startsWith('http://') && !ogImage.startsWith('https://')) {
+    ogImage = ogImage.startsWith('/') ? `${window.location.origin}${ogImage}` : `${window.location.origin}/${ogImage}`;
+  }
+  
   // Update page title
   document.title = `${post.title} - Transport and Society Online`;
   
-  // Create meta tags if they don't exist
+  // Update canonical link
+  const canonicalLink = document.getElementById('canonical-link');
+  if (canonicalLink) {
+    canonicalLink.href = fullUrl;
+  }
+  
+  // Create or update meta tags
   const metaTags = {
     'og:title': post.title,
-    'og:description': post.summary,
-    'og:url': window.location.href,
-    'og:image': post.image_url || `${window.location.origin}/default-og-image.jpg`,
+    'og:description': post.summary || 'Read the full article on Transport and Society Online',
+    'og:url': fullUrl,
+    'og:image': ogImage,
+    'og:image:width': '1200',
+    'og:image:height': '630',
+    'og:image:type': 'image/jpeg',
+    'og:image:alt': post.title,
+    'og:type': 'article',
+    'og:site_name': 'Transport and Society Online',
+    'twitter:card': 'summary_large_image',
     'twitter:title': post.title,
-    'twitter:description': post.summary,
-    'twitter:image': post.image_url || `${window.location.origin}/default-og-image.jpg`
+    'twitter:description': post.summary || 'Read the full article on Transport and Society Online',
+    'twitter:image': ogImage,
+    'twitter:image:alt': post.title
   };
   
   Object.entries(metaTags).forEach(([property, content]) => {
@@ -229,6 +251,8 @@ function updateMetaTags(post) {
     }
     meta.setAttribute('content', content);
   });
+  
+  console.log('Meta tags updated:', metaTags);
 }
 
 // Setup share buttons (for homepage and article page)
