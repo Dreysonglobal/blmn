@@ -203,10 +203,15 @@ function updateMetaTags(post) {
   const fullUrl = window.location.href;
   let ogImage = post.image_url || `${window.location.origin}/images/logo.png`;
   
+  console.log('Original image_url from post:', post.image_url);
+  console.log('ogImage after fallback:', ogImage);
+  
   // Ensure ogImage is an absolute URL
   if (ogImage && !ogImage.startsWith('http://') && !ogImage.startsWith('https://')) {
     ogImage = ogImage.startsWith('/') ? `${window.location.origin}${ogImage}` : `${window.location.origin}/${ogImage}`;
   }
+  
+  console.log('ogImage after absolute URL conversion:', ogImage);
   
   // Update page title
   document.title = `${post.title} - Transport and Society Online`;
