@@ -115,7 +115,28 @@ function sharePost(postId) {
   const post = window.postsCache ? window.postsCache[postId] : null;
   const text = getPostSummary(post) || (post ? post.title : 'Transport and Society Online');
   if (navigator.share) {
-    navigator.share({ title: post ? post.title : 'Transport and Society Online', text: text, url: shareUrl });
+    // Try to include the post image as a shared file (best WhatsApp experience)
+    if (post && post.image_url) {
+      fetchImageAsFile(post.image_url, post.title).then((file) => {
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          return navigator.share({
+            title: post.title,
+            text: `${text}\n\n${shareUrl}`,
+            url: shareUrl,
+            files: [file]
+          });
+        }
+        return navigator.share({
+          title: post.title,
+          text: `${text}\n\n${shareUrl}`,
+          url: shareUrl
+        });
+      }).catch(() => {
+        navigator.share({ title: post ? post.title : 'Transport and Society Online', text: `${text}\n\n${shareUrl}`, url: shareUrl });
+      });
+    } else {
+      navigator.share({ title: post ? post.title : 'Transport and Society Online', text: `${text}\n\n${shareUrl}`, url: shareUrl });
+    }
   } else {
     // Fallback: copy to clipboard
     navigator.clipboard.writeText(shareUrl).then(() => {
@@ -279,6 +300,43 @@ function setupShareButtons() {
 
   if (whatsappBtn) {
     whatsappBtn.href = `https://wa.me/?text=${waText}%20${currentUrl}`;
+    // Prefer native share with image file (WhatsApp receives image + caption)
+    whatsappBtn.addEventListener('click', async (e) => {
+      try {
+        // Only intercept if we have an article loaded and the browser supports sharing
+        if (!window.currentArticle || !navigator.share) return;
+
+        const post = window.currentArticle;
+        const shareUrl = window.location.href;
+        const text = getPostSummary(post) || post.title;
+
+        // If there's an image, try to share it as a file (best WhatsApp experience)
+        if (post.image_url) {
+          const file = await fetchImageAsFile(post.image_url, post.title);
+          if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+            e.preventDefault();
+            await navigator.share({
+              title: post.title,
+              text: `${text}\n\n${shareUrl}`,
+              url: shareUrl,
+              files: [file]
+            });
+            return;
+          }
+        }
+
+        // Otherwise, still use native share (text + link) if possible
+        e.preventDefault();
+        await navigator.share({
+          title: post.title,
+          text: `${text}\n\n${shareUrl}`,
+          url: shareUrl
+        });
+      } catch (err) {
+        // If anything fails, fall back to opening wa.me (do nothing here)
+        console.warn('WhatsApp native share failed, falling back:', err);
+      }
+    }, { passive: false });
   }
   if (facebookBtn) {
     facebookBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`;
@@ -306,6 +364,42 @@ function getPostSummary(post) {
   }
   const text = (post.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   return text.length > 240 ? text.substring(0, 240).trim() + '…' : text;
+}
+
+// Helper: fetch an image URL as a File for Web Share API
+async function fetchImageAsFile(imageUrl, title) {
+  try {
+    // Ensure absolute URL (some environments may store relative paths)
+    let url = imageUrl;
+    if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+      url = url.startsWith('/') ? `${window.location.origin}${url}` : `${window.location.origin}/${url}`;
+    }
+
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+
+    const blob = await res.blob();
+    if (!blob || blob.size === 0) return null;
+
+    const safeBase =
+      (title || 'image')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') || 'image';
+
+    // Derive extension from mime type when possible
+    const mime = blob.type || 'image/jpeg';
+    const ext = mime.includes('png') ? 'png'
+              : mime.includes('webp') ? 'webp'
+              : mime.includes('gif') ? 'gif'
+              : 'jpg';
+
+    return new File([blob], `${safeBase}.${ext}`, { type: mime });
+  } catch (e) {
+    return null;
+  }
 }
 
 // Make sure the sharePost function is globally accessible
