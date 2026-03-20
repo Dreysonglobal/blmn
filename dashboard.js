@@ -3,8 +3,8 @@ var supabaseClient = window.supabaseClient;
 
 if (!supabaseClient) {
     supabaseClient = window.supabase.createClient(
-        'https://objlzhklfzmntsrzczdm.supabase.co',
-        'sb_publishable_BkY6SheoAwuRAangWIhzCQ_P3OMyYME'
+        'https://apswdensachqenwsjflw.supabase.co',
+        'sb_publishable_UxfaC3Ud3CL0V3AC08ZuBQ_KVZ3l2hn'
     );
     window.supabaseClient = supabaseClient;
 }
@@ -12,6 +12,98 @@ if (!supabaseClient) {
 // DOM Elements - Declare them but don't initialize yet
 let logoutBtn, messageDiv, savePostBtn, clearFormBtn, imageUpload, uploadProgress, postsContainer;
 let postIdInput, postTitleInput, postCategoryInput, postSummaryInput, postContentInput, postImageInput;
+let editorsReady = false;
+let pendingEditorData = null;
+
+function sanitizeHtml(dirtyHtml) {
+    if (!dirtyHtml) return '';
+    if (!window.DOMPurify) return dirtyHtml;
+
+    return window.DOMPurify.sanitize(dirtyHtml, {
+        USE_PROFILES: { html: true },
+        ADD_ATTR: ['style', 'class', 'target', 'rel'],
+        ADD_TAGS: ['font'],
+        FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'style'],
+    });
+}
+
+function getEditorHtml(editorId) {
+    const editor = window.tinymce && window.tinymce.get(editorId);
+    if (editor) return editor.getContent({ format: 'html' }).trim();
+
+    const el = document.getElementById(editorId);
+    return el ? el.value.trim() : '';
+}
+
+function setEditorHtml(editorId, html) {
+    const editor = window.tinymce && window.tinymce.get(editorId);
+    if (editor) {
+        editor.setContent(html || '');
+        return;
+    }
+
+    const el = document.getElementById(editorId);
+    if (el) el.value = html || '';
+}
+
+async function initializeEditors() {
+    if (!window.tinymce) return;
+    if (!postSummaryInput || !postContentInput) return;
+    if (editorsReady) return;
+
+    const baseConfig = {
+        branding: false,
+        promotion: false,
+        plugins: 'paste lists link table code autolink charmap searchreplace visualblocks wordcount',
+        paste_data_images: false,
+        paste_as_text: false,
+        paste_merge_formats: false,
+        paste_remove_styles_if_webkit: false,
+        paste_remove_spans: false,
+        valid_elements: '*[*]',
+        font_family_formats: [
+            'Arial=arial,helvetica,sans-serif',
+            'Calibri=calibri,sans-serif',
+            'Cambria=cambria,serif',
+            'Courier New=courier new,courier,monospace',
+            'Georgia=georgia,serif',
+            'Segoe UI=segoe ui,sans-serif',
+            'Tahoma=tahoma,arial,helvetica,sans-serif',
+            'Times New Roman=times new roman,times,serif',
+            'Trebuchet MS=trebuchet ms,geneva,sans-serif',
+            'Verdana=verdana,geneva,sans-serif',
+        ].join(';'),
+        font_size_formats: '8pt 9pt 10pt 11pt 12pt 14pt 16pt 18pt 20pt 24pt 28pt 32pt 36pt 48pt 60pt 72pt',
+        content_style: 'body { font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; }',
+    };
+
+    const summaryConfig = {
+        ...baseConfig,
+        selector: '#post-summary',
+        height: 220,
+        menubar: false,
+        toolbar:
+            'undo redo | fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright | bullist numlist | outdent indent | removeformat | link | code',
+    };
+
+    const contentConfig = {
+        ...baseConfig,
+        selector: '#post-content',
+        height: 520,
+        menubar: true,
+        toolbar:
+            'undo redo | styles | fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist | outdent indent | blockquote | link table | removeformat | code',
+    };
+
+    await Promise.all([window.tinymce.init(summaryConfig), window.tinymce.init(contentConfig)]);
+    editorsReady = true;
+
+    if (pendingEditorData) {
+        setEditorHtml('post-summary', pendingEditorData.summary);
+        setEditorHtml('post-content', pendingEditorData.content);
+        pendingEditorData = null;
+    }
+}
 
 // Check authentication
 async function checkAuth() {
@@ -108,8 +200,8 @@ async function savePost() {
         
         const title = postTitleInput.value.trim();
         const category = postCategoryInput.value;
-        const summary = postSummaryInput.value.trim();
-        const content = postContentInput.value.trim();
+        const summary = sanitizeHtml(getEditorHtml('post-summary'));
+        const content = sanitizeHtml(getEditorHtml('post-content'));
         const imageUrl = postImageInput ? postImageInput.value.trim() : '';
         const postId = postIdInput ? postIdInput.value : '';
         
@@ -240,8 +332,14 @@ async function editPost(postId) {
         if (postIdInput) postIdInput.value = post.id;
         if (postTitleInput) postTitleInput.value = post.title;
         if (postCategoryInput) postCategoryInput.value = post.category;
-        if (postSummaryInput) postSummaryInput.value = post.summary;
-        if (postContentInput) postContentInput.value = post.content;
+        if (editorsReady) {
+            setEditorHtml('post-summary', post.summary || '');
+            setEditorHtml('post-content', post.content || '');
+        } else {
+            if (postSummaryInput) postSummaryInput.value = post.summary || '';
+            if (postContentInput) postContentInput.value = post.content || '';
+            pendingEditorData = { summary: post.summary || '', content: post.content || '' };
+        }
         if (postImageInput) postImageInput.value = post.image_url || '';
         
         // Update button text
@@ -292,8 +390,8 @@ function clearForm() {
     if (postIdInput) postIdInput.value = '';
     if (postTitleInput) postTitleInput.value = '';
     if (postCategoryInput) postCategoryInput.value = 'news';
-    if (postSummaryInput) postSummaryInput.value = '';
-    if (postContentInput) postContentInput.value = '';
+    setEditorHtml('post-summary', '');
+    setEditorHtml('post-content', '');
     if (postImageInput) postImageInput.value = '';
     if (savePostBtn) {
         savePostBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Post';
@@ -420,6 +518,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Initialize elements
     initializeElements();
+
+    // Initialize rich-text editors (TinyMCE)
+    await initializeEditors();
     
     // Check authentication
     const isAuthenticated = await checkAuth();

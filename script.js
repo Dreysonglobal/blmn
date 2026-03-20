@@ -1,18 +1,53 @@
-// Initialize Supabase client - Use a different variable name
-if (!window.supabaseClient) {
-    window.supabaseClient = window.supabase.createClient(
-        'https://objlzhklfzmntsrzczdm.supabase.co',
-        'sb_publishable_BkY6SheoAwuRAangWIhzCQ_P3OMyYME'
+// Initialize Supabase client (only on pages that load Supabase)
+let supabaseClient = window.supabaseClient || null;
+if (!supabaseClient && window.supabase && typeof window.supabase.createClient === 'function') {
+    supabaseClient = window.supabase.createClient(
+        'https://apswdensachqenwsjflw.supabase.co',
+        'sb_publishable_UxfaC3Ud3CL0V3AC08ZuBQ_KVZ3l2hn'
     );
+    window.supabaseClient = supabaseClient;
 }
-
-// Use the global supabaseClient - DON'T use 'const supabase'
-const supabaseClient = window.supabaseClient;
 
 // DOM Elements
 const postsContainer = document.getElementById('posts-container');
 const hamburger = document.getElementById('hamburger');
 const navbar = document.getElementById('navbar');
+
+function escapeHtml(value) {
+    return (value ?? '')
+        .toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function stripHtml(value) {
+    return (value ?? '')
+        .toString()
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function toDisplayHtml(value) {
+    const html = (value ?? '').toString();
+    if (/<[a-z][\s\S]*>/i.test(html)) return html;
+    return escapeHtml(html).replace(/\r?\n/g, '<br>');
+}
+
+function sanitizeRichHtml(dirtyHtml) {
+    if (!dirtyHtml) return '';
+    if (!window.DOMPurify) return dirtyHtml;
+
+    return window.DOMPurify.sanitize(dirtyHtml, {
+        USE_PROFILES: { html: true },
+        ADD_ATTR: ['style', 'class', 'target', 'rel'],
+        ADD_TAGS: ['font'],
+        FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'style'],
+    });
+}
 
 // Set current year in footer
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,6 +72,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // About dropdown menu
+    const dropdownToggles = document.querySelectorAll('.nav-dropdown-toggle');
+    dropdownToggles.forEach((toggle) => {
+        toggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const dropdown = toggle.closest('.nav-dropdown');
+            if (!dropdown) return;
+
+            const shouldOpen = !dropdown.classList.contains('open');
+            document.querySelectorAll('.nav-dropdown.open').forEach((d) => {
+                if (d !== dropdown) d.classList.remove('open');
+            });
+            dropdown.classList.toggle('open', shouldOpen);
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.nav-dropdown')) {
+            document.querySelectorAll('.nav-dropdown.open').forEach((d) => d.classList.remove('open'));
+        }
+    });
+
+    document.querySelectorAll('.nav-dropdown-menu a').forEach((link) => {
+        link.addEventListener('click', () => {
+            document.querySelectorAll('.nav-dropdown.open').forEach((d) => d.classList.remove('open'));
+            if (navbar) navbar.classList.remove('active');
+        });
+    });
+    
+    // Setup hero slider
+    setupHeroSlider();
     
     // Load article if on article page
     if (window.location.pathname.includes('article.html')) {
@@ -47,6 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // Load posts from Supabase
 async function loadPosts() {
     try {
+        if (!supabaseClient) {
+            throw new Error('Supabase client not initialized');
+        }
         const { data: posts, error } = await supabaseClient
             .from('posts')
             .select('*')
@@ -83,10 +155,13 @@ async function loadPosts() {
 // Create post card HTML
 function createPostCard(post) {
     const articleUrl = `article.html?id=${post.id}`;
+    const safeTitle = escapeHtml(post.title);
+    const safeCategory = escapeHtml((post.category || '').toUpperCase());
+    const safeSummaryHtml = sanitizeRichHtml(toDisplayHtml(post.summary || ''));
     return `
         <article class="post-card">
             ${post.image_url ? `
-                <img src="${post.image_url}" alt="${post.title}" class="post-image">
+                <img src="${post.image_url}" alt="${safeTitle}" class="post-image">
             ` : `
                 <div class="post-image" style="background-color: #e9ecef; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-newspaper" style="font-size: 3rem; color: #6c757d;"></i>
@@ -94,9 +169,9 @@ function createPostCard(post) {
             `}
             
             <div class="post-content">
-                <span class="post-category">${post.category.toUpperCase()}</span>
-                <h3 class="post-title">${post.title}</h3>
-                <p class="post-summary">${post.summary}</p>
+                <span class="post-category">${safeCategory}</span>
+                <h3 class="post-title">${safeTitle}</h3>
+                <div class="post-summary">${safeSummaryHtml}</div>
                 
                 <div class="post-meta">
                     <a href="${articleUrl}" class="read-more">Read Full Story</a>
@@ -163,6 +238,9 @@ async function loadArticle() {
   }
   
   try {
+    if (!supabaseClient) {
+      throw new Error('Supabase client not initialized');
+    }
     const { data: post, error } = await supabaseClient
       .from('posts')
       .select('*')
@@ -188,21 +266,24 @@ async function loadArticle() {
     window.currentArticle = post;
     
     // Display article
+    const safeTitle = escapeHtml(post.title);
+    const safeCategory = escapeHtml((post.category || '').toUpperCase());
+    const safeContentHtml = sanitizeRichHtml(toDisplayHtml(post.content || ''));
     articleContent.innerHTML = `
       <div class="article-header">
-        <span class="post-category">${post.category.toUpperCase()}</span>
-        <h1>${post.title}</h1>
+        <span class="post-category">${safeCategory}</span>
+        <h1>${safeTitle}</h1>
         <div class="article-meta">
           <span><i class="far fa-calendar"></i> ${new Date(post.created_at).toLocaleDateString()}</span>
         </div>
       </div>
       
       ${post.image_url ? `
-        <img src="${post.image_url}" alt="${post.title}" class="article-image">
+        <img src="${post.image_url}" alt="${safeTitle}" class="article-image">
       ` : ''}
       
       <div class="article-body">
-        ${post.content.replace(/\n/g, '<br>')}
+        ${safeContentHtml}
       </div>
     `;
     
@@ -246,7 +327,7 @@ function updateMetaTags(post) {
   // Create or update meta tags
   const metaTags = {
     'og:title': post.title,
-    'og:description': post.summary || 'Read the full article on Transport and Society Online',
+    'og:description': getPostSummary(post) || 'Read the full article on Transport and Society Online',
     'og:url': fullUrl,
     'og:image': ogImage,
     'og:image:width': '1200',
@@ -257,7 +338,7 @@ function updateMetaTags(post) {
     'og:site_name': 'Transport and Society Online',
     'twitter:card': 'summary_large_image',
     'twitter:title': post.title,
-    'twitter:description': post.summary || 'Read the full article on Transport and Society Online',
+    'twitter:description': getPostSummary(post) || 'Read the full article on Transport and Society Online',
     'twitter:image': ogImage,
     'twitter:image:alt': post.title
   };
@@ -358,12 +439,12 @@ function setupShareButtons() {
 // Helper: derive per-post summary
 function getPostSummary(post) {
   if (!post) return '';
-  const s = (post.summary || '').trim();
+  const s = stripHtml((post.summary || '').trim());
   if (s) {
-    return s.length > 240 ? s.substring(0, 240).trim() + '…' : s;
+    return s.length > 240 ? s.substring(0, 240).trim() + '...' : s;
   }
-  const text = (post.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  return text.length > 240 ? text.substring(0, 240).trim() + '…' : text;
+  const text = stripHtml(post.content || '');
+  return text.length > 240 ? text.substring(0, 240).trim() + '...' : text;
 }
 
 // Helper: fetch an image URL as a File for Web Share API
@@ -400,6 +481,61 @@ async function fetchImageAsFile(imageUrl, title) {
   } catch (e) {
     return null;
   }
+}
+
+// Hero Slider Functionality
+function setupHeroSlider() {
+    const slides = document.querySelectorAll('.hero-slide');
+    const controls = document.querySelectorAll('.hero-control');
+    
+    if (slides.length === 0 || controls.length === 0) return;
+    
+    let currentSlide = 0;
+    let slideInterval;
+    
+    function showSlide(index) {
+        // Hide all slides
+        slides.forEach(slide => slide.classList.remove('active'));
+        controls.forEach(control => control.classList.remove('active'));
+        
+        // Show current slide
+        slides[index].classList.add('active');
+        controls[index].classList.add('active');
+        
+        currentSlide = index;
+    }
+    
+    function nextSlide() {
+        const nextIndex = (currentSlide + 1) % slides.length;
+        showSlide(nextIndex);
+    }
+    
+    function startAutoSlide() {
+        slideInterval = setInterval(nextSlide, 3000); // Change slide every 3 seconds
+    }
+    
+    function stopAutoSlide() {
+        clearInterval(slideInterval);
+    }
+    
+    // Add click handlers to controls
+    controls.forEach((control, index) => {
+        control.addEventListener('click', () => {
+            showSlide(index);
+            stopAutoSlide();
+            startAutoSlide(); // Restart auto-slide
+        });
+    });
+    
+    // Pause auto-slide on hover
+    const hero = document.querySelector('.hero');
+    if (hero) {
+        hero.addEventListener('mouseenter', stopAutoSlide);
+        hero.addEventListener('mouseleave', startAutoSlide);
+    }
+    
+    // Start auto-slide
+    startAutoSlide();
 }
 
 // Make sure the sharePost function is globally accessible

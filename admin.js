@@ -1,7 +1,7 @@
 // Use the global supabaseClient - Use the same variable name as script.js
 const supabaseClient = window.supabaseClient || window.supabase.createClient(
-    'https://objlzhklfzmntsrzczdm.supabase.co',
-    'sb_publishable_BkY6SheoAwuRAangWIhzCQ_P3OMyYME'
+    'https://apswdensachqenwsjflw.supabase.co',
+    'sb_publishable_UxfaC3Ud3CL0V3AC08ZuBQ_KVZ3l2hn'
 );
 
 // Store it globally if not already stored

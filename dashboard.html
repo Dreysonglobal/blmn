@@ -3,37 +3,37 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Transport and Society Online</title>
+        <title>Dashboard - Believers Leadership Mission & Networks</title>
         <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         
         <!-- Favicon and Apple Touch Icon -->
-        <link rel="apple-touch-icon" sizes="180x180" href="images/logo.png">
-        <link rel="icon" type="image/png" sizes="32x32" href="images/logo.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="images/logo.png">
-        <link rel="icon" type="image/x-icon" href="images/logo.png">
-        <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+        <link rel="apple-touch-icon" sizes="180x180" href="images/logo.JPEG">
+        <link rel="icon" type="image/png" sizes="32x32" href="images/logo.JPEG">
+        <link rel="icon" type="image/png" sizes="16x16" href="images/logo.JPEG">
+        <link rel="icon" type="image/x-icon" href="images/logo.JPEG">
+        <link rel="shortcut icon" href="images/logo.JPEG" type="image/x-icon">
         
         <!-- Open Graph / Social Media Meta Tags -->
-        <meta property="og:image" content="images/logo.png">
+        <meta property="og:image" content="images/logo.JPEG">
         <meta property="og:image:width" content="512">
         <meta property="og:image:height" content="512">
         <meta property="og:image:type" content="image/png">
-        <meta property="og:image:alt" content="Transport and Society Online Logo">
+        <meta property="og:image:alt" content="BLM&N Logo">
         
-        <meta name="twitter:image" content="images/logo.png">
+        <meta name="twitter:image" content="images/logo.JPEG">
         
         <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
-    <script src="dashboard.js"></script>
-</head>
+        <script src="https://cdn.tiny.cloud/1/2xvmsdnwej6vczv1num3alnqt0d0ru3gynilwb7z5itpl269/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.11/purify.min.js"></script>
+    </head>
 <body class="dashboard-page">
     <!-- Dashboard Header -->
     <header class="dashboard-header">
         <div class="container">
             <div class="dashboard-logo">
                 <div class="logo-icon">
-                    <img src="images/logo.png" alt="Transport and Society Online Logo" class="logo-image">
+                    <img src="images/logo.JPEG" alt="BLM&N Logo" class="logo-image">
                 </div>
                 <h1>Admin Dashboard</h1>
             </div>
@@ -76,10 +76,12 @@
                         <div class="form-group">
                             <label for="post-category">Category *</label>
                             <select id="post-category">
-                                <option value="news">News</option>
-                                <option value="publication">Publication</option>
-                                <option value="event">Event</option>
-                                <option value="research">Research</option>
+                                <option value="leadership-insights">Leadership Insights</option>
+                                <option value="biblical-analysis">Biblical Analysis</option>
+                                <option value="case-studies">Case Studies</option>
+                                <option value="leadership-series">Leadership Series</option>
+                                <option value="practical-frameworks">Practical Frameworks</option>
+                                <option value="announcements">Announcements</option>
                             </select>
                         </div>
                     </div>
