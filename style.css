@@ -1002,25 +1002,26 @@ footer {
         border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
-    .nav-dropdown-menu {
+    /* Override desktop selector `.navbar .nav-dropdown-menu` */
+    .navbar .nav-dropdown-menu {
         position: static;
         top: auto;
         left: auto;
         min-width: 100%;
-        background: rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.95);
         box-shadow: none;
         margin: 0.25rem 0 0.75rem;
         border-radius: 10px;
         overflow: hidden;
     }
 
-    .nav-dropdown-menu a {
-        color: white;
-        border-bottom: 1px solid rgba(255,255,255,0.12);
+    .navbar .nav-dropdown-menu a {
+        color: var(--brand-navy);
+        border-bottom: 1px solid rgba(0,0,0,0.06);
     }
 
-    .nav-dropdown-menu a:hover {
-        background: rgba(255,255,255,0.10);
+    .navbar .nav-dropdown-menu a:hover {
+        background: rgba(242, 176, 30, 0.12);
     }
     
     .posts-grid {
