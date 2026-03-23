@@ -16,9 +16,12 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 18px;
     line-height: 1.6;
     color: #333;
     background-color: #f9f9f9;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .container {
@@ -64,6 +67,12 @@ header {
     font-weight: 700;
 }
 
+.site-title {
+    margin: 0;
+    line-height: 1.15;
+    text-shadow: 0 10px 24px rgba(0,0,0,0.18);
+}
+
 /* Hamburger Menu */
 .hamburger {
     display: none;
@@ -84,7 +93,10 @@ header {
     color: white;
     text-decoration: none;
     font-weight: 500;
-    padding: 0.5rem 0;
+    padding: 0.65rem 0;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.15;
     transition: color 0.3s;
 }
 
@@ -104,12 +116,15 @@ header {
     background: none;
     border: none;
     color: white;
+    font-family: inherit;
+    font-size: 1rem;
     font-weight: 500;
-    padding: 0.5rem 0;
+    padding: 0.65rem 0;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
+    line-height: 1.15;
     transition: color 0.3s;
 }
 
@@ -200,8 +215,13 @@ header {
 
 /* Simple centered content pages (About dropdown pages) */
 .info-hero {
-    padding: 4rem 0 2.5rem;
-    background: linear-gradient(180deg, rgba(179, 19, 43, 0.10) 0%, rgba(242, 176, 30, 0.08) 100%);
+    position: relative;
+    padding: 5.5rem 0 3.25rem;
+    background:
+        radial-gradient(1200px 500px at 20% 20%, rgba(242, 176, 30, 0.25) 0%, rgba(242, 176, 30, 0.00) 55%),
+        radial-gradient(900px 400px at 80% 10%, rgba(179, 19, 43, 0.22) 0%, rgba(179, 19, 43, 0.00) 60%),
+        linear-gradient(180deg, rgba(179, 19, 43, 0.12) 0%, rgba(242, 176, 30, 0.08) 100%);
+    overflow: hidden;
 }
 
 .info-hero .container {
@@ -210,15 +230,16 @@ header {
 
 .info-hero h1 {
     color: var(--brand-navy);
-    font-size: 2.2rem;
+    font-size: 2.8rem;
     margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
 }
 
 .info-hero p {
     max-width: 780px;
     margin: 0 auto;
     color: #555;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
 }
 
 .info-content {
@@ -230,26 +251,73 @@ header {
     margin: 0 auto;
     background: white;
     border-radius: 14px;
-    padding: 2rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    text-align: center;
+    padding: 2.75rem 2.5rem;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.10);
+    text-align: left;
+}
+
+.info-card h2 {
+    color: var(--brand-navy);
+    font-size: 1.75rem;
+    margin: 2.25rem 0 0.75rem;
+    letter-spacing: -0.015em;
+}
+
+.info-card h2:first-child {
+    margin-top: 0;
+}
+
+.info-card h3 {
+    color: var(--brand-navy);
+    font-size: 1.25rem;
+    margin: 1.75rem 0 0.5rem;
+}
+
+.info-card p {
+    font-size: 1.08rem;
+    color: #333;
+    margin-bottom: 0.9rem;
 }
 
 .info-card ul {
     list-style: none;
     padding: 0;
     margin: 1.25rem auto;
-    max-width: 720px;
+    max-width: 780px;
     text-align: left;
 }
 
 .info-card li {
+    position: relative;
     padding: 0.6rem 0;
+    padding-left: 1.6rem;
     border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.info-card li:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.95rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--brand-gradient);
+    box-shadow: 0 8px 18px rgba(179, 19, 43, 0.18);
 }
 
 .info-card li:last-child {
     border-bottom: none;
+}
+
+.info-card blockquote {
+    margin: 1.75rem 0;
+    padding: 1.1rem 1.25rem;
+    background: linear-gradient(180deg, rgba(179, 19, 43, 0.08) 0%, rgba(242, 176, 30, 0.10) 100%);
+    border-left: 5px solid rgba(179, 19, 43, 0.65);
+    border-radius: 12px;
+    color: #2b2b2b;
 }
 
 .hero-slide p {
@@ -1079,6 +1147,31 @@ footer {
 
 /* ====== LOGO IMAGE STYLES ====== */
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.logo-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 12px;
+}
+
+.logo-link:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 4px;
+}
+
 .logo-image {
     width: 100%;
     height: 100%;
@@ -1088,16 +1181,18 @@ footer {
 
 /* Update logo-icon to work with images */
 .logo-icon {
-    background-color: transparent; /* Remove the blue background */
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
     overflow: hidden; /* Ensure image stays within bounds */
-    padding: 5px; /* Add some padding for the image */
+    padding: 6px; /* Add some padding for the image */
+    box-shadow: 0 10px 24px rgba(0,0,0,0.18);
 }
 
 .logo-icon img {
@@ -1108,24 +1203,51 @@ footer {
 
 /* Header logo - slightly larger */
 header .logo-icon {
-    width: 60px;
-    height: 60px;
+    width: 74px;
+    height: 74px;
 }
 
 /* Join Page Styles */
 .join-hero {
-    background: linear-gradient(rgba(26, 54, 93, 0.9), rgba(26, 54, 93, 0.8)), 
-                url('images/hero1.jpg');
+    position: relative;
+    background:
+        linear-gradient(135deg, rgba(179, 19, 43, 0.82), rgba(26, 54, 93, 0.82)),
+        url('images/hero1.webp');
     background-size: cover;
     background-position: center;
     color: white;
-    padding: 4rem 0;
+    padding: 5.25rem 0 4.5rem;
     text-align: center;
+    overflow: hidden;
+}
+
+.join-hero:before {
+    content: "";
+    position: absolute;
+    inset: -40% -20% auto auto;
+    width: 520px;
+    height: 520px;
+    background: radial-gradient(circle at 30% 30%, rgba(242, 176, 30, 0.55) 0%, rgba(242, 176, 30, 0) 60%);
+    transform: rotate(12deg);
+    pointer-events: none;
+}
+
+.join-hero h1 {
+    font-size: 3rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+}
+
+.join-hero p {
+    font-size: 1.15rem;
+    opacity: 0.95;
 }
 
 .join-content {
     padding: 4rem 0;
-    background-color: #f9f9f9;
+    background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(242, 176, 30, 0.10) 0%, rgba(242, 176, 30, 0) 55%),
+        linear-gradient(180deg, #f9f9f9 0%, #ffffff 100%);
 }
 
 .join-intro {
@@ -1152,6 +1274,7 @@ header .logo-icon {
     padding: 2rem;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.06);
 }
 
 .join-form-container h2 {
@@ -1188,7 +1311,7 @@ header .logo-icon {
     padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 5px;
-    font-size: 1rem;
+    font-size: 1.05rem;
     transition: border-color 0.3s;
 }
 
@@ -1215,6 +1338,14 @@ header .logo-icon {
 
 /* Responsive Design for Join Form */
 @media (max-width: 768px) {
+    .join-hero {
+        padding: 4.25rem 0 3.75rem;
+    }
+
+    .join-hero h1 {
+        font-size: 2.35rem;
+    }
+
     .join-form .form-row {
         flex-direction: column;
         gap: 0;
@@ -1249,7 +1380,7 @@ footer .logo-icon {
 
 /* Logo for social sharing meta tags */
 meta[property="og:image"] {
-    content: url('../images/logo.png');
+    content: url('../images/logo.jpg');
 }
 
 /* ====== FAVICON FALLBACK STYLES ====== */
@@ -1272,6 +1403,10 @@ meta[property="og:image"] {
 
 /* Responsive logo sizes */
 @media (max-width: 768px) {
+    body {
+        font-size: 16px;
+    }
+
     header .logo-icon {
         width: 50px;
         height: 50px;

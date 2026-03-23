@@ -188,7 +188,7 @@ function createPostCard(post) {
 function sharePost(postId) {
   const shareUrl = `${window.location.origin}/article.html?id=${postId}`;
   const post = window.postsCache ? window.postsCache[postId] : null;
-  const text = getPostSummary(post) || (post ? post.title : 'Transport and Society Online');
+  const text = getPostSummary(post) || (post ? post.title : 'Believers Leadership Networks');
   if (navigator.share) {
     // Try to include the post image as a shared file (best WhatsApp experience)
     if (post && post.image_url) {
@@ -207,10 +207,10 @@ function sharePost(postId) {
           url: shareUrl
         });
       }).catch(() => {
-        navigator.share({ title: post ? post.title : 'Transport and Society Online', text: `${text}\n\n${shareUrl}`, url: shareUrl });
+        navigator.share({ title: post ? post.title : 'Believers Leadership Networks', text: `${text}\n\n${shareUrl}`, url: shareUrl });
       });
     } else {
-      navigator.share({ title: post ? post.title : 'Transport and Society Online', text: `${text}\n\n${shareUrl}`, url: shareUrl });
+      navigator.share({ title: post ? post.title : 'Believers Leadership Networks', text: `${text}\n\n${shareUrl}`, url: shareUrl });
     }
   } else {
     // Fallback: copy to clipboard
@@ -303,7 +303,7 @@ async function loadArticle() {
 
 function updateMetaTags(post) {
   const fullUrl = window.location.href;
-  let ogImage = post.image_url || `${window.location.origin}/images/logo.png`;
+  let ogImage = post.image_url || `${window.location.origin}/images/logo.jpg`;
   
   console.log('Original image_url from post:', post.image_url);
   console.log('ogImage after fallback:', ogImage);
@@ -316,7 +316,7 @@ function updateMetaTags(post) {
   console.log('ogImage after absolute URL conversion:', ogImage);
   
   // Update page title
-  document.title = `${post.title} - Transport and Society Online`;
+  document.title = `${post.title} - Believers Leadership Networks`;
   
   // Update canonical link
   const canonicalLink = document.getElementById('canonical-link');
@@ -327,7 +327,7 @@ function updateMetaTags(post) {
   // Create or update meta tags
   const metaTags = {
     'og:title': post.title,
-    'og:description': getPostSummary(post) || 'Read the full article on Transport and Society Online',
+    'og:description': getPostSummary(post) || 'Read the full article on Believers Leadership Networks',
     'og:url': fullUrl,
     'og:image': ogImage,
     'og:image:width': '1200',
@@ -335,10 +335,10 @@ function updateMetaTags(post) {
     'og:image:type': 'image/jpeg',
     'og:image:alt': post.title,
     'og:type': 'article',
-    'og:site_name': 'Transport and Society Online',
+    'og:site_name': 'Believers Leadership Networks',
     'twitter:card': 'summary_large_image',
     'twitter:title': post.title,
-    'twitter:description': getPostSummary(post) || 'Read the full article on Transport and Society Online',
+    'twitter:description': getPostSummary(post) || 'Read the full article on Believers Leadership Networks',
     'twitter:image': ogImage,
     'twitter:image:alt': post.title
   };
