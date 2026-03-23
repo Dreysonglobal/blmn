@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Join Us - Believers Leadership Networks</title>
+        <title>Newsletter - Believers Leadership Networks</title>
         <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         
@@ -53,7 +53,7 @@
                             <li><a href="our-approach.html">Our Approach</a></li>
                         </ul>
                     </li>
-                    <li><a href="join.html" class="active">Join Us</a></li>
+                    <li><a href="join.html" class="active">Newsletter</a></li>
                 </ul>
             </nav>
         </div>
@@ -61,41 +61,40 @@
 
     <section class="join-hero">
         <div class="container">
-            <h1>Join Our Mission</h1>
-            <p>Be part of building a global network of biblically grounded leaders</p>
+            <h1>Subscribe to Our Newsletter</h1>
+            <p>Get new leadership insights and updates delivered to you.</p>
         </div>
     </section>
 
     <section class="join-content">
         <div class="container">
             <div class="join-intro">
-                <h2>Partner with BLM&N</h2>
-                <p>Leadership is not a destination. It is a journey shaped by decisions, tested by adversity, refined by humility, and strengthened by wisdom.</p>
-                <p>Believers Leadership Networks invites you to walk that journey intentionally. Whether you're a leader seeking growth, a mentor ready to guide, or someone passionate about biblical leadership development, we want to hear from you.</p>
+                <h2>Stay Connected</h2>
+                <p>Subscribe and be the first to receive new biblical leadership resources, articles, and announcements from Believers Leadership Networks.</p>
             </div>
             
             <div class="join-form-container">
-                <h2>Application Form</h2>
+                <h2>Newsletter Subscription</h2>
                 <form id="join-form" class="join-form">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="first-name">First Name *</label>
-                            <input type="text" id="first-name" name="firstName" required>
+                            <label for="name">Name *</label>
+                            <input type="text" id="name" name="name" autocomplete="given-name" required>
                         </div>
                         <div class="form-group">
-                            <label for="last-name">Last Name *</label>
-                            <input type="text" id="last-name" name="lastName" required>
+                            <label for="surname">Surname *</label>
+                            <input type="text" id="surname" name="surname" autocomplete="family-name" required>
                         </div>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
                             <label for="email">Email Address *</label>
-                            <input type="email" id="email" name="email" required>
+                            <input type="email" id="email" name="email" autocomplete="email" required>
                         </div>
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
-                            <input type="tel" id="phone" name="phone">
+                            <input type="tel" id="phone" name="phone" autocomplete="tel">
                         </div>
                     </div>
                     
@@ -103,7 +102,7 @@
                     
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane"></i> Send
+                            <i class="fas fa-envelope"></i> Subscribe
                         </button>
                         <div id="form-message" class="message"></div>
                     </div>
@@ -133,7 +132,7 @@
                     <ul>
                         <li><a href="index.html">Home</a></li>
                         <li><a href="our-leadership-network.html">About Us</a></li>
-                        <li><a href="join.html">Join Us</a></li>
+                        <li><a href="join.html">Newsletter</a></li>
                         <li><a href="mailto:info@believersleadership.org">Contact</a></li>
                     </ul>
                 </div>
@@ -157,7 +156,7 @@
                 
                 // Collect form data
                 const formData = new FormData(joinForm);
-                let emailBody = 'New BLM&N Membership Application\n\n';
+                let emailBody = 'New Newsletter Subscription\n\n';
                 
                 for (let [key, value] of formData.entries()) {
                     const label = document.querySelector(`label[for="${key}"]`);
@@ -166,7 +165,7 @@
                 }
                 
                 // Encode for mailto
-                const subject = encodeURIComponent('BLM&N Membership Application');
+                const subject = encodeURIComponent('Newsletter Subscription');
                 const body = encodeURIComponent(emailBody);
                 const mailtoLink = `mailto:info@believersleadership.org?subject=${subject}&body=${body}`;
                 
@@ -174,7 +173,7 @@
                 window.location.href = mailtoLink;
                 
                 // Show success message
-                formMessage.textContent = 'Opening your email client to send the application...';
+                formMessage.textContent = 'Opening your email client to confirm your subscription...';
                 formMessage.className = 'message success';
                 formMessage.style.display = 'block';
                 
